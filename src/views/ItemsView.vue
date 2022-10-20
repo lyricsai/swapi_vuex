@@ -2,6 +2,7 @@
     <template v-if="isLoading">
         <p>Loading Data for {{ routeName }}...</p>
     </template>
+
     <template v-else>
         <k-dialog
             :show="dialogSearchVisible"
@@ -28,6 +29,9 @@
                     </div>
                 </h3>
             </div>
+            <template v-if="$store.state.items.totalItems === 0"
+                >No such Data</template
+            >
             <ul>
                 <router-link
                     v-for="item in items"
@@ -90,7 +94,7 @@ export default defineComponent({
     data() {
         return {
             isLoading: true,
-            items: null,
+            items: null as unknown[] | null,
             dialogSearchVisible: false,
             query: {} as LocationQuery & { search?: string; page?: number },
         };
@@ -135,15 +139,9 @@ export default defineComponent({
                 return;
             }
             this.$store.commit("items/SET_CURRENT_PAGE", pageNumber);
-            this.routeHandler();
 
-            // this.addParamsToLocation(this.query);
-            this.isLoading = true;
-            this["items/GET_ITEMS_ACTION"]({
-                resolve: this.handleSuccess,
-                reject: this.handleFail,
-                itemClass: this.routeName,
-            });
+            this.routeHandler();
+            this.load();
         },
         showSearch() {
             return (this.dialogSearchVisible = true);
@@ -154,6 +152,19 @@ export default defineComponent({
                 query: { search: this.searchQuery, page: this.currentPage },
             });
         },
+        update() {
+            this.$store.commit("items/SET_SEARCH_QUERY", "");
+            this.$store.commit("items/SET_CURRENT_PAGE", 1);
+            this.load();
+        },
+        load() {
+            this.isLoading = true;
+            this["items/GET_ITEMS_ACTION"]({
+                resolve: this.handleSuccess,
+                reject: this.handleFail,
+                itemClass: this.routeName,
+            });
+        },
     },
     created() {
         this.$router.push({
@@ -161,18 +172,12 @@ export default defineComponent({
             query: this.$route.query,
         });
 
-        this.isLoading = true;
         this.$store.commit(
             "items/SET_CURRENT_PAGE",
             Number(this?.routeQuery?.page) || 1
         );
         this.$store.commit("items/SET_SEARCH_QUERY", this.$route.query.search);
-
-        this["items/GET_ITEMS_ACTION"]({
-            resolve: this.handleSuccess,
-            reject: this.handleFail,
-            itemClass: this.routeName,
-        });
+        this.load();
     },
     computed: {
         ...mapState({ state: (state) => (state as any).items.state }),
@@ -196,21 +201,14 @@ export default defineComponent({
         },
     },
     watch: {
-        routeName() {
-            if (!this.$route.params.query) {
-                this.$store.commit("items/SET_SEARCH_QUERY", "");
-                this.$store.commit("items/SET_CURRENT_PAGE", 1);
-            }
-            delete this.query.search;
-            this.isLoading = true;
-            this["items/GET_ITEMS_ACTION"]({
-                resolve: this.handleSuccess,
-                reject: this.handleFail,
-                itemClass: this.routeName,
-            });
+        $route(to) {
+            this.$store.commit("items/SET_SEARCH_QUERY", to.query.search);
+            this.$store.commit("items/SET_CURRENT_PAGE", Number(to.query.page));
+            this.load();
         },
-        searchQuery() {
-            this.query.search = this.searchQuery;
+        routeName() {
+            if (Array.isArray(this.items)) this.items.length = 0;
+            this.update();
         },
     },
 });

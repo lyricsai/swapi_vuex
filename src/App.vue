@@ -15,9 +15,17 @@
 <script>
 import FooterBar from "@/components/FooterBar.vue";
 import HeaderBar from "@/components/HeaderBar.vue";
+import { mapGetters } from "vuex";
 
 export default {
     components: { HeaderBar, FooterBar },
+    methods: {
+        locationHandler(e) {
+            e.preventDefault();
+            console.log(location);
+            console.log(history, history.state);
+        },
+    },
     computed: {
         routeName() {
             return this.$route.name;

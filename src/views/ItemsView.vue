@@ -202,13 +202,21 @@ export default defineComponent({
     },
     watch: {
         $route(to) {
+            console.log(to.query.page, history.state.current);
             this.$store.commit("items/SET_SEARCH_QUERY", to.query.search);
-            this.$store.commit("items/SET_CURRENT_PAGE", Number(to.query.page));
+            this.$store.commit(
+                "items/SET_CURRENT_PAGE",
+                Number(to.query.page) || 1
+            );
             this.load();
         },
         routeName() {
             if (Array.isArray(this.items)) this.items.length = 0;
-            this.update();
+            if (!history.state.current.includes("page")) {
+                this.update();
+            } else {
+                this.load();
+            }
         },
     },
 });

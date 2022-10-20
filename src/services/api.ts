@@ -9,6 +9,7 @@ export const fetchAdditionalData = async (resolve, reject, link: string) => {
 };
 
 export const getItems = (resolve, reject, { itemClass, page, searchFor }) => {
+    console.log(page);
     axios
         .get(itemClass, { params: { page, search: searchFor } })
         .then((response) => resolve(response))

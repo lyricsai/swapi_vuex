@@ -123,8 +123,8 @@ section {
         color: #fff;
     }
     &:hover {
-        transition: all 1s linear 0s;
-        width: 30rem;
+        transition: all 0.5s linear 0s;
+        min-width: 20rem;
     }
     &:active {
         background: gray;
